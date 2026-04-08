@@ -9,16 +9,21 @@ public class MagicWandGrabber : MonoBehaviour
     [Header("Wand Settings")]
     public Transform wandTip;
     public float maxGrabDistance = 10f;
-    public float levitationDistance = 2f;
     public float moveSpeed = 10f;
     public LayerMask grabbableLayer;
 
+    // NEW: Offset settings for the hover position
+    // 新增：懸浮位置的偏移量設定
+    [Header("Hover Offsets")]
+    public float heightOffset = 0.2f;   // How much higher to float (懸浮時多高，單位：公尺)
+    public float forwardOffset = 0.3f;  // How much further forward to float (懸浮時多往前，單位：公尺)
+
     private Rigidbody grabbedObject;
     private float originalDrag;
+    private float currentGrabDistance;
 
     void Update()
     {
-        // Changed to UnityEngine.Debug (已更改為 UnityEngine.Debug)
         if (wandTip != null)
         {
             UnityEngine.Debug.DrawRay(wandTip.position, wandTip.forward * maxGrabDistance, Color.red);
@@ -48,9 +53,6 @@ public class MagicWandGrabber : MonoBehaviour
 
         if (Physics.Raycast(wandTip.position, wandTip.forward, out hit, maxGrabDistance, grabbableLayer))
         {
-            // Changed to UnityEngine.Debug (已更改為 UnityEngine.Debug)
-            UnityEngine.Debug.Log("Magic hit: " + hit.collider.gameObject.name);
-
             Rigidbody rb = hit.collider.GetComponent<Rigidbody>();
             if (rb != null)
             {
@@ -59,18 +61,25 @@ public class MagicWandGrabber : MonoBehaviour
 
                 originalDrag = grabbedObject.linearDamping;
                 grabbedObject.linearDamping = 5f;
-            }
-            else
-            {
-                // Changed to UnityEngine.Debug (已更改為 UnityEngine.Debug)
-                UnityEngine.Debug.LogWarning("The object hit does not have a Rigidbody! (打到的物件沒有剛體！)");
+
+                // Remember the original distance 
+                currentGrabDistance = Vector3.Distance(wandTip.position, grabbedObject.position);
             }
         }
     }
 
     void LevitateObject()
     {
-        Vector3 targetPosition = wandTip.position + wandTip.forward * levitationDistance;
+        // 1. Calculate the base distance + the extra forward offset
+        float targetDistance = currentGrabDistance + forwardOffset;
+
+        // 2. Find the position straight in front of the wand
+        Vector3 targetPosition = wandTip.position + wandTip.forward * targetDistance;
+
+        // 3. Add the height offset (Vector3.up ensures it always goes straight up towards the ceiling)
+        targetPosition += Vector3.up * heightOffset;
+
+        // 4. Move the object
         Vector3 direction = targetPosition - grabbedObject.position;
         grabbedObject.linearVelocity = direction * moveSpeed;
     }
