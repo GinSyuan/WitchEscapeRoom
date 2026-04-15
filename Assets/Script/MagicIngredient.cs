@@ -11,7 +11,7 @@ public class MagicIngredient : MonoBehaviour
 
     void Start()
     {
-        // Save the starting position on the table (記住桌上的初始位置)
+        // Save the starting position on the table 
         originalPosition = transform.position;
         originalRotation = transform.rotation;
         rb = GetComponent<Rigidbody>();
@@ -19,7 +19,7 @@ public class MagicIngredient : MonoBehaviour
 
     public void RespawnOnTable()
     {
-        // Teleport back to the table and stop moving (傳送回桌上並停止移動)
+        // Teleport back to the table and stop moving 
         transform.position = originalPosition;
         transform.rotation = originalRotation;
 

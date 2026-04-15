@@ -6,9 +6,7 @@ public class PotionRecipe
 {
     public string potionName;
     public List<string> requiredIngredients;
-
-    [Header("The Potion Object already on the table")]
-    public GameObject potionToActivate; // NEW: We just need a reference to the hidden object (新增：只需要這個隱藏物件的參考)
+    public GameObject potionToActivate;
 }
 
 public class Cauldron : MonoBehaviour
@@ -16,18 +14,21 @@ public class Cauldron : MonoBehaviour
     [Header("Brewing Settings")]
     public List<PotionRecipe> allRecipes;
 
+    [Header("Win Settings (勝利設定)")]
+    public GameObject winScreenUI; // The "You Escaped" text object 
+    public int potionsNeededToWin = 3; // How many to win 
+
     private PotionRecipe currentActiveRecipe = null;
     private List<string> ingredientsInside = new List<string>();
     private List<GameObject> physicalItemsInCauldron = new List<GameObject>();
 
+    // NEW: Memory to track which potions are finished!
+    private List<string> brewedPotions = new List<string>();
+
     void OnTriggerEnter(Collider other)
     {
         MagicIngredient item = other.GetComponent<MagicIngredient>();
-
-        if (item != null)
-        {
-            ProcessIngredient(item);
-        }
+        if (item != null) ProcessIngredient(item);
     }
 
     void ProcessIngredient(MagicIngredient item)
@@ -35,15 +36,8 @@ public class Cauldron : MonoBehaviour
         if (currentActiveRecipe == null)
         {
             currentActiveRecipe = FindRecipeThatUses(item.ingredientName);
-
-            if (currentActiveRecipe != null)
-            {
-                AcceptItem(item);
-            }
-            else
-            {
-                item.RespawnOnTable();
-            }
+            if (currentActiveRecipe != null) AcceptItem(item);
+            else item.RespawnOnTable();
         }
         else
         {
@@ -67,7 +61,6 @@ public class Cauldron : MonoBehaviour
     {
         ingredientsInside.Add(item.ingredientName);
         physicalItemsInCauldron.Add(item.gameObject);
-        UnityEngine.Debug.Log("Added " + item.ingredientName + " to cauldron.");
     }
 
     void CheckIfPotionFinished()
@@ -76,37 +69,53 @@ public class Cauldron : MonoBehaviour
         {
             UnityEngine.Debug.Log("Potion Complete: " + currentActiveRecipe.potionName);
 
-            // UPDATED: Simply turn on the hidden potion! (更新：直接開啟隱藏的魔藥！)
             if (currentActiveRecipe.potionToActivate != null)
             {
                 currentActiveRecipe.potionToActivate.SetActive(true);
             }
-            else
+
+
+
+            if (!brewedPotions.Contains(currentActiveRecipe.potionName))
             {
-                UnityEngine.Debug.LogError("You forgot to assign the hidden potion object for " + currentActiveRecipe.potionName + "!");
+                brewedPotions.Add(currentActiveRecipe.potionName);
             }
 
-            // Destroy the used ingredients
+
+            if (brewedPotions.Count >= potionsNeededToWin)
+            {
+                TriggerWinState();
+            }
+
+
             foreach (GameObject obj in physicalItemsInCauldron)
             {
                 Destroy(obj);
             }
 
-            // Reset the cauldron
             currentActiveRecipe = null;
             ingredientsInside.Clear();
             physicalItemsInCauldron.Clear();
         }
     }
 
+    void TriggerWinState()
+    {
+        UnityEngine.Debug.Log("YOU ESCAPED! Game Over.");
+
+        if (winScreenUI != null)
+        {
+            winScreenUI.SetActive(true);
+        }
+
+        Time.timeScale = 0f;
+    }
+
     PotionRecipe FindRecipeThatUses(string ingredientName)
     {
         foreach (PotionRecipe recipe in allRecipes)
         {
-            if (recipe.requiredIngredients.Contains(ingredientName))
-            {
-                return recipe;
-            }
+            if (recipe.requiredIngredients.Contains(ingredientName)) return recipe;
         }
         return null;
     }

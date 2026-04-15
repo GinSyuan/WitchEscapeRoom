@@ -1,0 +1,2 @@
+C:\Users\Jing\Desktop\VR\GitHub\WitchEscapeRoom\Library\Bee\Android\Prj\IL2CPP\Gradle\unityLibrary\src\main\cpp\CMakeLists.txt
+C:\Users\Jing\Desktop\VR\GitHub\WitchEscapeRoom\Library\Bee\Android\Prj\IL2CPP\Gradle\unityLibrary\src\main\cpp\GameActivity\CMakeLists.txt
